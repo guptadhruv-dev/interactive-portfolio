@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sidebar-width: 200px;
+  --sidebar-collapsed-width: 64px;
+  --motion-duration: 0.4s;
+  --motion-ease:     cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration:  0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg-primary);
+  color: var(--color-fg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.prose {
+  --tw-prose-body:          var(--color-fg-primary);
+  --tw-prose-headings:      var(--color-fg-primary);
+  --tw-prose-lead:          var(--color-fg-primary);
+  --tw-prose-links:         var(--color-fg-primary);
+  --tw-prose-bold:          var(--color-fg-primary);
+  --tw-prose-counters:      var(--color-fg-primary);
+  --tw-prose-bullets:       var(--color-fg-primary);
+  --tw-prose-hr:            var(--color-fg-secondary);
+  --tw-prose-quotes:        var(--color-fg-primary);
+  --tw-prose-quote-borders: var(--color-fg-secondary);
+  --tw-prose-captions:      var(--color-fg-primary);
+  --tw-prose-code:          var(--color-fg-primary);
+  --tw-prose-pre-code:      var(--color-fg-primary);
+  --tw-prose-pre-bg:        var(--color-bg-primary);
+  --tw-prose-th-borders:    var(--color-fg-secondary);
+  --tw-prose-td-borders:    var(--color-fg-secondary);
+}
+
+.prose blockquote p:first-of-type::before,
+.prose blockquote p:last-of-type::after {
+  content: none;
+}
+
+.dark .prose {
+  --tw-prose-invert-body:          var(--color-fg-primary);
+  --tw-prose-invert-headings:      var(--color-fg-primary);
+  --tw-prose-invert-lead:          var(--color-fg-primary);
+  --tw-prose-invert-links:         var(--color-fg-primary);
+  --tw-prose-invert-bold:          var(--color-fg-primary);
+  --tw-prose-invert-counters:      var(--color-fg-primary);
+  --tw-prose-invert-bullets:       var(--color-fg-primary);
+  --tw-prose-invert-hr:            var(--color-fg-secondary);
+  --tw-prose-invert-quotes:        var(--color-fg-primary);
+  --tw-prose-invert-quote-borders: var(--color-fg-secondary);
+  --tw-prose-invert-captions:      var(--color-fg-primary);
+  --tw-prose-invert-code:          var(--color-fg-primary);
+  --tw-prose-invert-pre-code:      var(--color-fg-primary);
+  --tw-prose-invert-pre-bg:        var(--color-bg-primary);
+  --tw-prose-invert-th-borders:    var(--color-fg-secondary);
+  --tw-prose-invert-td-borders:    var(--color-fg-secondary);
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  user-select: none;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-fg-secondary);
+  border-radius: 2px;
+  opacity: 0.3;
+}
