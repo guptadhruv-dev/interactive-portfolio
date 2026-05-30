@@ -1,7 +1,7 @@
 import { GithubLogo, LinkedinLogo, EnvelopeSimple, DownloadSimple } from '@phosphor-icons/react';
 
 const links = [
-  { Icon: GithubLogo,     href: 'https://github.com/dhrvgpta',                       label: 'GitHub'   },
+  { Icon: GithubLogo,     href: 'https://github.com/guptadhruv-dev',                       label: 'GitHub'   },
   { Icon: LinkedinLogo,   href: 'https://www.linkedin.com/in/dhruv-g-1343a5317',     label: 'LinkedIn' },
   { Icon: EnvelopeSimple, href: 'mailto:connect@guptadhruv.dev',                     label: 'Email'    },
   { Icon: DownloadSimple, href: '/Resume.pdf',                                       label: 'Resume'   },
