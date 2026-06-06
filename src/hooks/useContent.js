@@ -1,91 +1,59 @@
 import { useState, useEffect } from 'react';
 
-const GIST_URL =
-  'https://gist.githubusercontent.com/dhrvgpta/a6836ceaa780a75069224c00aaa77fd4/raw/profile.md';
+const BASE_URL = '/api/content';
 
-const SECTION_RE = /::section\{((?:[^"}]|"(?:[^"\\]|\\.)*")*)\}/g;
-const FENCE_RE   = /^(`{3,}|~{3,})/;
-const ID_RE      = /\bid\s*:\s*(\d+)/;
-const LABEL_RE   = /\blabel\s*:\s*"((?:[^"\\]|\\.)*)"/;
-
-function parseSectionProps(input) {
-  const out = { id: null, label: null };
-  if (typeof input !== 'string') return out;
-
-  const idMatch = input.match(ID_RE);
-  if (idMatch) out.id = idMatch[1];
-
-  const labelMatch = input.match(LABEL_RE);
-  if (labelMatch) out.label = labelMatch[1].replace(/\\(["\\])/g, '$1');
-
-  return out;
-}
-
-function findSectionMarkers(raw) {
-  const lines  = raw.split('\n');
-  const markers = [];
-  let inFence   = false;
-  let fenceChar = '';
-  let offset    = 0;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    const fence   = trimmed.match(FENCE_RE);
-
-    if (fence) {
-      if (!inFence) {
-        inFence   = true;
-        fenceChar = fence[1][0];
-      } else if (trimmed.startsWith(fenceChar.repeat(3))) {
-        inFence = false;
-      }
-    } else if (!inFence) {
-      SECTION_RE.lastIndex = 0;
-      let m;
-      while ((m = SECTION_RE.exec(line)) !== null) {
-        markers.push({
-          start: offset + m.index,
-          end:   offset + m.index + m[0].length,
-          inner: m[1],
-        });
-      }
-    }
-
-    offset += line.length + 1;
+function parseFrontmatter(raw) {
+  if (!raw.startsWith('---')) return { meta: {}, content: raw };
+  const end = raw.indexOf('\n---', 3);
+  if (end === -1) return { meta: {}, content: raw };
+  const block = raw.slice(3, end).trim();
+  const content = raw.slice(end + 4).trim();
+  const meta = {};
+  for (const line of block.split('\n')) {
+    const colon = line.indexOf(':');
+    if (colon === -1) continue;
+    const key = line.slice(0, colon).trim();
+    const val = line.slice(colon + 1).trim();
+    if (val === 'true')       meta[key] = true;
+    else if (val === 'false') meta[key] = false;
+    else if (/^\d+$/.test(val)) meta[key] = Number(val);
+    else                      meta[key] = val;
   }
-
-  return markers;
-}
-
-function parseContent(raw) {
-  const markers  = findSectionMarkers(raw);
-  const sections = [];
-
-  for (let i = 0; i < markers.length; i++) {
-    const { end, inner }  = markers[i];
-    const nextStart       = i + 1 < markers.length ? markers[i + 1].start : raw.length;
-    const { id, label }   = parseSectionProps(inner);
-    if (id == null || label == null) continue;
-
-    const content = raw.slice(end, nextStart).trim();
-    sections.push({ id, label, content });
-  }
-
-  return sections.sort((a, b) => Number(a.id) - Number(b.id));
+  return { meta, content };
 }
 
 export function useContent() {
   const [sections, setSections] = useState([]);
-  const [loading,  setLoading]  = useState(true);
+  const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
-    fetch(GIST_URL + '?t=' + Date.now(), { cache: 'no-store' })
+    fetch(`${BASE_URL}/index.json`)
       .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch content (' + res.status + ')');
-        return res.text();
+        if (!res.ok) throw new Error('Failed to fetch index (' + res.status + ')');
+        return res.json();
       })
-      .then(raw => {
-        setSections(parseContent(raw));
+      .then(filenames =>
+        Promise.all(
+          filenames.map(filename =>
+            fetch(`${BASE_URL}/${filename}`)
+              .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch ' + filename);
+                return res.text();
+              })
+              .then(raw => {
+                const { meta, content } = parseFrontmatter(raw);
+                const id = filename.replace(/\.md$/, '');
+                const vars = {};
+                for (const [k, v] of Object.entries(meta)) {
+                  if (k.startsWith('$')) vars[k.slice(1)] = v;
+                }
+                return { id, label: meta.label, rank: meta.rank, vars, content };
+              })
+          )
+        )
+      )
+      .then(data => {
+        setSections(data.sort((a, b) => a.rank - b.rank));
         setLoading(false);
       })
       .catch(() => {

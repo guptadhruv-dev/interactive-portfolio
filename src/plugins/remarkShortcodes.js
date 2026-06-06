@@ -3,8 +3,9 @@ const CLOSE_RE  = /^::end\s*$/;
 const INLINE_RE = /::([a-zA-Z][a-zA-Z0-9_-]*)\s*\{([^}]*)\}/g;
 const PROP_RE   = /([a-zA-Z_][a-zA-Z0-9_-]*)\s*=\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')/g;
 
-const BLOCK_NAMES  = new Set(['toggle']);
-const INLINE_NAMES = new Set(['icon']);
+const BLOCK_NAMES  = new Set(['toggle', 'callout', 'columns', 'col', 'card', 'gallery', 'embed', 'bookmark']);
+const VOID_NAMES   = new Set(['gallery', 'embed', 'bookmark']);
+const INLINE_NAMES = new Set(['icon', 'badge', 'ref', 'anchor']);
 
 const FENCE_RE = /^(`{3,}|~{3,})/;
 
@@ -48,7 +49,7 @@ export function normalizeShortcodes(input) {
   return out.join('\n');
 }
 
-export function parseProps(input) {
+function parseProps(input) {
   const out = {};
   if (typeof input !== 'string' || input.length === 0) return out;
   PROP_RE.lastIndex = 0;
@@ -68,10 +69,19 @@ function castValue(value) {
 
 function paragraphText(node) {
   if (!node || node.type !== 'paragraph') return null;
-  if (!Array.isArray(node.children) || node.children.length !== 1) return null;
-  const child = node.children[0];
-  if (child.type !== 'text') return null;
-  return child.value.trim();
+  if (!Array.isArray(node.children) || node.children.length === 0) return null;
+
+  let out = '';
+  for (const child of node.children) {
+    if (child.type === 'text') {
+      out += child.value;
+    } else if (child.type === 'link' && typeof child.url === 'string') {
+      out += child.url;
+    } else {
+      return null;
+    }
+  }
+  return out.trim();
 }
 
 function makeData(name, props) {
@@ -141,6 +151,19 @@ function transformBlocks(parent) {
     if (open && BLOCK_NAMES.has(open[1])) {
       const name  = open[1];
       const props = parseProps(open[2]);
+
+      if (VOID_NAMES.has(name)) {
+        out.push({
+          type: 'shortcode',
+          name,
+          props,
+          children: [],
+          data: makeData(name, props),
+        });
+        i++;
+        continue;
+      }
+
       let depth = 1;
       let j = i + 1;
 
@@ -148,7 +171,7 @@ function transformBlocks(parent) {
         const t = paragraphText(arr[j]);
         if (t) {
           const om = t.match(OPEN_RE);
-          if (om && BLOCK_NAMES.has(om[1])) {
+          if (om && BLOCK_NAMES.has(om[1]) && !VOID_NAMES.has(om[1])) {
             depth++;
           } else if (CLOSE_RE.test(t)) {
             depth--;

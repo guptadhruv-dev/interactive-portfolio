@@ -1,57 +1,45 @@
 import { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import rehypeHighlight from 'rehype-highlight';
 import remarkShortcodes, { normalizeShortcodes } from '../plugins/remarkShortcodes';
 import { shortcodeComponents } from './shortcodes';
+import Reveal from './Reveal';
 
 const REMARK_PLUGINS = [remarkGfm, remarkShortcodes];
+const REHYPE_PLUGINS = [rehypeRaw, [rehypeHighlight, { detect: true, ignoreMissing: true }]];
 
-export default function Section({
-  id,
-  label,
-  content,
-  isFirst = false,
-}) {
-  const normalized = useMemo(() => normalizeShortcodes(content), [content]);
+export default function Section({ id, vars = {}, content, isFirst = false }) {
+  const normalized = useMemo(() => {
+    const withVars = (content ?? '').replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? '');
+    const spaced = withVars.replace(/\n{3,}/g, (m) =>
+      '\n\n<div style="height:' + ((m.length - 2) * 1.5) + 'em"></div>\n\n'
+    );
+    return normalizeShortcodes(spaced);
+  }, [content, vars]);
 
   return (
     <section
       id={id}
       style={{
-        minHeight:     '100vh',
-        paddingTop:    isFirst ? '80px' : '60px',
-        paddingBottom: '80px',
+        minHeight:       '100vh',
+        paddingTop:      isFirst ? '80px' : '60px',
+        paddingBottom:   '80px',
+        scrollSnapAlign: 'start',
+        scrollSnapStop:  'always',
       }}
     >
-      <div
-        style={{
-          padding:    '0 40px',
-        }}
-      >
-        {label ? (
-          <h1
-            style={{
-              fontFamily:    'var(--font-family)',
-              fontSize:      '42px',
-              fontWeight:    700,
-              lineHeight:    1.15,
-              letterSpacing: '-0.02em',
-              color:         'var(--color-fg-primary)',
-              margin:        '0 0 32px 0',
-            }}
-          >
-            {label}
-          </h1>
-        ) : null}
-
-        <div className="prose dark:prose-invert max-w-none">
+      <div className="section-body">
+        <Reveal className="prose">
           <ReactMarkdown
             remarkPlugins={REMARK_PLUGINS}
+            rehypePlugins={REHYPE_PLUGINS}
             components={shortcodeComponents}
           >
             {normalized}
           </ReactMarkdown>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

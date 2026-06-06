@@ -39,17 +39,16 @@ export default function ThemeProvider({ children }) {
     root.style.setProperty('--color-fg-primary',   theme.foreground.primary);
     root.style.setProperty('--color-fg-secondary', theme.foreground.secondary);
 
-    root.style.setProperty('--text-heading-size',   typography.heading.fontSize);
-    root.style.setProperty('--text-heading-weight', typography.heading.fontWeight);
-    root.style.setProperty('--text-heading-lh',     typography.heading.lineHeight);
+    for (const [key, value] of Object.entries(theme.accent)) {
+      root.style.setProperty(`--accent-${key}`, value);
+    }
+    for (const [key, value] of Object.entries(theme.syntax)) {
+      root.style.setProperty(`--syntax-${key}`, value);
+    }
 
     root.style.setProperty('--text-nav-size',   typography.navButton.fontSize);
     root.style.setProperty('--text-nav-weight', typography.navButton.fontWeight);
     root.style.setProperty('--text-nav-lh',     typography.navButton.lineHeight);
-
-    root.style.setProperty('--text-body-size',   typography.body.fontSize);
-    root.style.setProperty('--text-body-weight', typography.body.fontWeight);
-    root.style.setProperty('--text-body-lh',     typography.body.lineHeight);
 
     root.style.setProperty('--motion-duration', motion.duration);
     root.style.setProperty('--motion-ease',     motion.ease);

@@ -1,8 +1,9 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import SectionButton from './SectionButton';
 import Divider from './Divider';
 import Links from './Links';
 import ThemeToggle from './ThemeToggle';
+import name from '../assets/name.svg';
 
 const avatarModules = import.meta.glob(
   '../assets/avatar.{png,jpg,jpeg,webp,svg,gif,avif}',
@@ -10,16 +11,12 @@ const avatarModules = import.meta.glob(
 );
 const avatarSrc = Object.values(avatarModules)[0] ?? null;
 
-const M                = 'var(--motion-duration) var(--motion-ease)';
-const MOBILE_QUERY     = '(max-width: 767px)';
-const TOP_BTN_SIZE     = 32;
-const TOP_GAP          = 20;
-const COLUMN_MAX_WIDTH = 280;
-const AVATAR_MIN_SIZE  = 48;
-const AVATAR_MAX_SIZE  = COLUMN_MAX_WIDTH;
-const DIVIDER_HEIGHT   = 2.5;
-const MIN_CONTENT_GAP  = 12;
-const CONTENT_GAP      = 'clamp(12px, 2vh, 20px)';
+const M            = 'var(--motion-duration) var(--motion-ease)';
+const MOBILE_QUERY = '(max-width: 767px)';
+const TOP_BTN_SIZE = 32;
+const TOP_GAP      = 20;
+const CONTENT_GAP  = 'clamp(12px, 2vh, 20px)';
+const IDENTITY_MAX_WIDTH = 200;
 
 function detectMobile() {
   return typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches;
@@ -29,21 +26,9 @@ function fadeTransition(visible) {
   return `opacity ${M}, transform ${M}, visibility 0s linear ${visible ? '0s' : 'var(--motion-duration)'}`;
 }
 
-function readPx(value, fallback = 0) {
-  const parsed = Number.parseFloat(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
 export default function Sidebar({ activeSection, onNavClick, sections = [] }) {
   const [isMobile,  setIsMobile]  = useState(detectMobile);
   const [collapsed, setCollapsed] = useState(false);
-  const [avatarSize, setAvatarSize] = useState(AVATAR_MAX_SIZE);
-
-  const middleRef          = useRef(null);
-  const expandedContentRef = useRef(null);
-  const identityRef        = useRef(null);
-  const titleRef           = useRef(null);
-  const navRef             = useRef(null);
 
   useEffect(() => {
     const mq = window.matchMedia(MOBILE_QUERY);
@@ -55,67 +40,6 @@ export default function Sidebar({ activeSection, onNavClick, sections = [] }) {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  useLayoutEffect(() => {
-    const middle   = middleRef.current;
-    const content  = expandedContentRef.current;
-    const identity = identityRef.current;
-    const title    = titleRef.current;
-    const nav      = navRef.current;
-
-    if (!middle || !content || !identity || !title || !nav) return;
-
-    let frame = 0;
-
-    const measure = () => {
-      if (frame) cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-
-        const contentStyle  = window.getComputedStyle(content);
-        const identityStyle = window.getComputedStyle(identity);
-        const contentGap    = readPx(contentStyle.rowGap || contentStyle.gap, MIN_CONTENT_GAP);
-        const identityGap   = readPx(identityStyle.rowGap || identityStyle.gap, MIN_CONTENT_GAP);
-
-        const fixedHeight =
-          title.offsetHeight +
-          nav.offsetHeight +
-          DIVIDER_HEIGHT * 2 +
-          contentGap * 3 +
-          identityGap;
-
-        const widthLimit = Math.min(middle.clientWidth, AVATAR_MAX_SIZE);
-        const available  = middle.clientHeight - fixedHeight;
-        const nextSize   = Math.round(
-          Math.max(AVATAR_MIN_SIZE, Math.min(widthLimit, AVATAR_MAX_SIZE, available))
-        );
-
-        setAvatarSize((prev) => (Math.abs(prev - nextSize) > 1 ? nextSize : prev));
-      });
-    };
-
-    measure();
-
-    const observer = typeof ResizeObserver === 'function'
-      ? new ResizeObserver(measure)
-      : null;
-
-    if (observer) {
-      observer.observe(middle);
-      observer.observe(content);
-      observer.observe(identity);
-      observer.observe(title);
-      observer.observe(nav);
-    }
-
-    window.addEventListener('resize', measure);
-
-    return () => {
-      if (frame) cancelAnimationFrame(frame);
-      if (observer) observer.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, [sections.length, collapsed, isMobile]);
-
   const toggleSidebar = () => setCollapsed((v) => !v);
 
   const navigate = (id) => {
@@ -125,9 +49,11 @@ export default function Sidebar({ activeSection, onNavClick, sections = [] }) {
 
   const expandedWidth = isMobile ? '100vw' : 'var(--sidebar-width)';
   const sidebarWidth  = collapsed ? 'var(--sidebar-collapsed-width)' : expandedWidth;
-  const sidebarPad    = collapsed ? '48px 16px' : '48px 28px';
-
   const morphTransition = `top ${M}, left ${M}, transform ${M}`;
+
+  const PAD_X      = collapsed ? 15 : 25;
+  const linksWidth = collapsed ? '100%' : `calc(${expandedWidth} - ${PAD_X * 2}px)`;
+  const linksAlign = isMobile || collapsed ? 'center' : 'flex-start';
 
   return (
     <aside
@@ -142,7 +68,7 @@ export default function Sidebar({ activeSection, onNavClick, sections = [] }) {
         flexDirection:   'column',
         justifyContent:  'space-evenly',
         alignItems:      'center',
-        padding:         sidebarPad,
+        padding:         `45px ${PAD_X}px`,
         flexShrink:      0,
         zIndex:          10,
         overflow:        'hidden',
@@ -153,7 +79,6 @@ export default function Sidebar({ activeSection, onNavClick, sections = [] }) {
       <div style={{
         position:   'relative',
         width:      '100%',
-        maxWidth:   COLUMN_MAX_WIDTH,
         height:     collapsed ? TOP_BTN_SIZE * 2 + TOP_GAP : TOP_BTN_SIZE,
         flexShrink: 0,
         transition: `height ${M}`,
@@ -230,26 +155,22 @@ export default function Sidebar({ activeSection, onNavClick, sections = [] }) {
       </div>
 
       <div style={{
-        position: 'relative',
-        width:    '100%',
-        maxWidth: COLUMN_MAX_WIDTH,
-        flex:     1,
+        position:  'relative',
+        width:     '100%',
+        flex:      1,
         minHeight: 0,
-      }}
-      ref={middleRef}
-      >
+      }}>
         <div
-          ref={expandedContentRef}
           style={{
             position:       'absolute',
             inset:          0,
             display:        'flex',
             flexDirection:  'column',
-            alignItems:     'center',
             justifyContent: 'space-evenly',
+            alignItems:     'center',
             gap:            CONTENT_GAP,
             opacity:        collapsed ? 0 : 1,
-            transform:      collapsed ? 'scale(0.94)' : 'scale(1)',
+            transform:      collapsed ? 'translateY(-22px) scale(0.94)' : 'translateY(0) scale(1)',
             visibility:     collapsed ? 'hidden' : 'visible',
             pointerEvents:  collapsed ? 'none' : 'auto',
             overflow:       'hidden',
@@ -257,9 +178,9 @@ export default function Sidebar({ activeSection, onNavClick, sections = [] }) {
           }}
         >
           <div
-            ref={identityRef}
             style={{
               width:         '100%',
+              maxWidth:      IDENTITY_MAX_WIDTH,
               minHeight:     0,
               flex:          '0 1 auto',
               display:       'flex',
@@ -269,10 +190,8 @@ export default function Sidebar({ activeSection, onNavClick, sections = [] }) {
             }}
           >
             <div style={{
-              width:           avatarSize,
-              height:          avatarSize,
-              maxWidth:        '100%',
-              maxHeight:       avatarSize,
+              width:           '100%',
+              maxWidth:        '150px',
               aspectRatio:     '1/1',
               flexShrink:      0,
               borderRadius:    '14px',
@@ -293,31 +212,33 @@ export default function Sidebar({ activeSection, onNavClick, sections = [] }) {
                 />
               ) : null}
             </div>
-            <h1
-              ref={titleRef}
+            <div
+              role="img"
+              aria-label="Dhruv Gupta"
               style={{
-                fontFamily:    'var(--font-family)',
-                fontSize:      '24px',
-                fontWeight:    '800',
-                color:         'var(--color-fg-primary)',
-                margin:        0,
-                textAlign:     isMobile ? 'center' : 'left',
-                width:         '100%',
-                flexShrink:    0,
+                width:              '100%',
+                maxWidth:           '150px',
+                aspectRatio:        '172 / 96',
+                backgroundColor:    'var(--color-fg-primary)',
+                WebkitMaskImage:    `url(${name})`,
+                maskImage:          `url(${name})`,
+                WebkitMaskRepeat:   'no-repeat',
+                maskRepeat:         'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskPosition:       'center',
+                WebkitMaskSize:     'contain',
+                maskSize:           'contain',
               }}
-            >
-              DHRUV<br />GUPTA
-            </h1>
+            />
           </div>
 
-          <Divider style={{ flexShrink: 0, width: avatarSize }} />
+          <Divider style={{ flexShrink: 0, width: '100%' }} />
 
           <nav
-            ref={navRef}
             style={{
               display:       'flex',
               flexDirection: 'column',
-              alignItems:    'center',
+              alignItems:    'stretch',
               gap:           CONTENT_GAP,
               width:         '100%',
               flexShrink:    0,
@@ -334,53 +255,54 @@ export default function Sidebar({ activeSection, onNavClick, sections = [] }) {
             ))}
           </nav>
 
-          <Divider style={{ flexShrink: 0, width: avatarSize }} />
+          <Divider style={{ flexShrink: 0, width: '100%' }} />
         </div>
 
-        <nav style={{
-          position:       'absolute',
-          inset:          0,
-          display:        'flex',
-          flexDirection:  'column',
-          alignItems:     'center',
-          justifyContent: 'center',
-          gap:            CONTENT_GAP,
-          width:          '100%',
-          minHeight:      0,
-          opacity:        collapsed ? 1 : 0,
-          transform:      collapsed ? 'scale(1)' : 'scale(0.94)',
-          visibility:     collapsed ? 'visible' : 'hidden',
-          pointerEvents:  collapsed ? 'auto' : 'none',
-          overflow:       'hidden',
-          transition:     fadeTransition(collapsed),
-        }}>
-          <Divider style={{ flexShrink: 0 }} />
-          <div style={{
-            display:       'flex',
-            flexDirection: 'column',
-            alignItems:    'center',
+        <nav
+          style={{
+            position:       'absolute',
+            inset:          0,
+            display:        'flex',
+            flexDirection:  'column',
+            alignItems:     'center',
             justifyContent: 'center',
-            gap:           CONTENT_GAP,
-            width:         '100%',
-            minHeight:     0,
-            flex:          '0 1 auto',
+            gap:            CONTENT_GAP,
+            width:          '100%',
+            opacity:        collapsed ? 1 : 0,
+            transform:      collapsed ? 'translateY(0) scale(1)' : 'translateY(22px) scale(0.94)',
+            visibility:     collapsed ? 'visible' : 'hidden',
+            pointerEvents:  collapsed ? 'auto' : 'none',
+            overflow:       'hidden',
+            transition:     fadeTransition(collapsed),
+          }}
+        >
+          <Divider style={{ flexShrink: 0, width: '100%' }} />
+          <div style={{
+            display:        'flex',
+            flexDirection:  'column',
+            alignItems:     'center',
+            justifyContent: 'center',
+            gap:            CONTENT_GAP,
+            width:          '100%',
+            minHeight:      0,
+            flex:           '0 1 auto',
           }}>
-            {sections.map(({ id }) => (
+            {sections.map(({ id, label }) => (
               <SectionButton
                 key={id}
-                label={id}
+                label={(label || id).charAt(0).toUpperCase()}
                 isActive={activeSection === id}
                 onClick={() => navigate(id)}
                 align="center"
               />
             ))}
           </div>
-          <Divider style={{ flexShrink: 0 }} />
+          <Divider style={{ flexShrink: 0, width: '100%' }} />
         </nav>
       </div>
 
-      <div style={{ width: avatarSize, flexShrink: 0 }}>
-        <Links vertical={collapsed} />
+      <div style={{ width: linksWidth, alignSelf: linksAlign, flexShrink: 0 }}>
+        <Links vertical={collapsed} center={isMobile || collapsed} />
       </div>
     </aside>
   );
