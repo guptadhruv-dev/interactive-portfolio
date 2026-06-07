@@ -1,8 +1,4 @@
-export const fontFamily = "Inter, sans-serif";
-
-export const typography = {
-  navButton: { fontSize: '20px', fontWeight: '400', lineHeight: '1.4' },
-};
+export const fontFamily = "Google Sans, sans-serif";
 
 export const motion = {
   duration: '0.4s',

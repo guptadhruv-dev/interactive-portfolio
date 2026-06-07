@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { fontFamily, typography, colors, motion } from '../design.config';
+import { fontFamily, colors, motion } from '../design.config';
 
 const STORAGE_KEY = 'theme-mode';
 
@@ -45,10 +45,6 @@ export default function ThemeProvider({ children }) {
     for (const [key, value] of Object.entries(theme.syntax)) {
       root.style.setProperty(`--syntax-${key}`, value);
     }
-
-    root.style.setProperty('--text-nav-size',   typography.navButton.fontSize);
-    root.style.setProperty('--text-nav-weight', typography.navButton.fontWeight);
-    root.style.setProperty('--text-nav-lh',     typography.navButton.lineHeight);
 
     root.style.setProperty('--motion-duration', motion.duration);
     root.style.setProperty('--motion-ease',     motion.ease);

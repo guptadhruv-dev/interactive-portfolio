@@ -5,8 +5,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration:  0.01ms !important;
+    transition-duration: 0.05ms !important;
+    animation-duration:  0.05ms !important;
     animation-iteration-count: 1 !important;
   }
   .content-scroll { scroll-behavior: auto; }
@@ -21,6 +21,7 @@
 .content-scroll {
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
 }
 
 body {
@@ -294,6 +295,7 @@ a.sc-card:hover {
   font-size: 0.9em;
   color: var(--color-fg-secondary);
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -363,5 +365,5 @@ a.sc-card:hover {
 ::-webkit-scrollbar-thumb {
   background: var(--color-fg-secondary);
   border-radius: 2px;
-  opacity: 0.3;
+  opacity: 0.25;
 }

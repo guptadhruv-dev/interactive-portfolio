@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const BASE_URL = '/api/content';
+const BASE_URL = 'https://data.guptadhruv.dev';
 
 function parseFrontmatter(raw) {
   if (!raw.startsWith('---')) return { meta: {}, content: raw };

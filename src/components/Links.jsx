@@ -10,8 +10,8 @@ const links = [
 ];
 
 const M         = 'var(--motion-duration) var(--motion-ease)';
-const ICON_SIZE = 22;
-const ROW_GAP   = 20;
+const ICON_SIZE = 24;
+const ROW_GAP   = 18;
 
 export default function Links({ vertical = false, center = false }) {
   return (

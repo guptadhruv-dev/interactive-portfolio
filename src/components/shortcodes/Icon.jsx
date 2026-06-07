@@ -33,7 +33,7 @@ export default function Icon({ node }) {
   if (typeof name !== 'string' || name.length === 0) return null;
   const iconName = name.trim().toLowerCase().replace(/\s+/g, '_');
 
-  const fontSize  = toNumber(size, 20);
+  const fontSize  = toNumber(size, 28);
   const weightVal = typeof weight === 'string' && weight in WEIGHT_MAP
     ? WEIGHT_MAP[weight]
     : toNumber(weight, 400);
@@ -53,7 +53,8 @@ export default function Icon({ node }) {
       aria-hidden="true"
       style={{
         fontSize:              fontSize+1 + 'px',
-        lineHeight:            1.2,
+        lineHeight:            '1.0em',
+        paddingBottom:         '0.2em',
         display:               'inline-block',
         verticalAlign:         'middle',
         color:                 resolvedColor,
